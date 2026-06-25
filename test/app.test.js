@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { app } from "../src/app.js";
+import { parseNotionJson } from "../src/notion.js";
 
 test("GET /health returns service status", async () => {
   const response = await app.request("/health");
@@ -102,4 +103,9 @@ test("POST /api/notion/collect stores collected source without generating HTML",
     delete process.env.REPORTS_DIR;
     await rm(reportDir, { recursive: true, force: true });
   }
+});
+
+test("parseNotionJson accepts fenced JSON from model responses", () => {
+  const parsed = parseNotionJson('```json\n{"title":"테스트","tags":["notion"],"body":"본문"}\n```');
+  assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
 });

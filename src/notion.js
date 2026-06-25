@@ -20,6 +20,12 @@ function buildSampleId(title) {
     .slice(0, 54)}`;
 }
 
+export function parseNotionJson(text) {
+  const trimmed = text.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
 export async function collectNotionSource({ queryText }) {
   if ((process.env.NOTION_MODE || "mock") === "mock") {
     const title = "Notion MCP 수집 샘플";
@@ -59,7 +65,7 @@ export async function collectNotionSource({ queryText }) {
     messages.push(message);
   }
 
-  const parsed = JSON.parse(parseText(messages));
+  const parsed = parseNotionJson(parseText(messages));
   return {
     id: buildSampleId(parsed.title),
     title: parsed.title,
@@ -68,4 +74,3 @@ export async function collectNotionSource({ queryText }) {
     body: parsed.body,
   };
 }
-
