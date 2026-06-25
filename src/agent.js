@@ -33,8 +33,24 @@ function parseSdkText(messages) {
   return chunks.join("\n").trim();
 }
 
-export async function analyzeSample(sample) {
-  if ((process.env.AI_MODE || "mock") === "mock") {
+export function parseAgentJson(text) {
+  const trimmed = text.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+  return JSON.parse(fenced ? fenced[1] : trimmed);
+}
+
+function normalizeAgentPayload(payload) {
+  return {
+    summary: typeof payload.summary === "string" && payload.summary.trim() ? payload.summary.trim() : "분석 요약을 생성하지 못했습니다.",
+    audience: typeof payload.audience === "string" && payload.audience.trim() ? payload.audience.trim() : "자료를 검토하는 실무자",
+    contentIdeas: Array.isArray(payload.contentIdeas) && payload.contentIdeas.length > 0 ? payload.contentIdeas.map(String) : ["자료를 다시 확인한 뒤 핵심 질문을 정리하기"],
+    nextActions: Array.isArray(payload.nextActions) && payload.nextActions.length > 0 ? payload.nextActions.map(String) : ["더미 데이터로 흐름을 먼저 확인합니다."],
+  };
+}
+
+export async function analyzeSample(sample, options = {}) {
+  const mode = process.env.AI_MODE || (options.queryRunner ? "real" : "mock");
+  if (mode === "mock") {
     return buildMockAnalysis(sample);
   }
 
@@ -49,26 +65,31 @@ export async function analyzeSample(sample) {
   ].join("\n");
 
   const messages = [];
-  for await (const message of query({
+  const queryRunner = options.queryRunner || query;
+  try {
+    for await (const message of queryRunner({
     prompt,
     options: {
+      allowedTools: [],
+      disallowedTools: ["mcp__*", "Bash", "Read", "Write", "Edit", "MultiEdit", "WebFetch", "WebSearch"],
       maxTurns: 3,
-      permissionMode: "default",
+      permissionMode: "dontAsk",
+      settingSources: [],
+      strictMcpConfig: true,
+      tools: [],
     },
   })) {
-    messages.push(message);
+      messages.push(message);
+    }
+
+    const parsed = normalizeAgentPayload(parseAgentJson(parseSdkText(messages)));
+    return {
+      sampleId: sample.id,
+      title: sample.title,
+      model: "claude-agent-sdk",
+      ...parsed,
+    };
+  } catch {
+    return { ...buildMockAnalysis(sample), model: "mock-agent-fallback" };
   }
-
-  const text = parseSdkText(messages);
-  const parsed = JSON.parse(text);
-  return {
-    sampleId: sample.id,
-    title: sample.title,
-    model: "claude-agent-sdk",
-    summary: parsed.summary,
-    audience: parsed.audience,
-    contentIdeas: parsed.contentIdeas,
-    nextActions: parsed.nextActions,
-  };
 }
-

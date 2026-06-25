@@ -13,38 +13,57 @@ function setStatus(text) {
   statusEl.textContent = text;
 }
 
+function clear(element) {
+  element.replaceChildren();
+}
+
+function createElement(tagName, { className, text, href, dataset } = {}) {
+  const element = document.createElement(tagName);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  if (href) element.href = href;
+  if (dataset) {
+    for (const [key, value] of Object.entries(dataset)) {
+      element.dataset[key] = value;
+    }
+  }
+  return element;
+}
+
 async function loadSamples() {
   const { samples } = await fetchJson("/api/samples");
-  samplesEl.innerHTML = samples
-    .map(
-      (sample) => `
-      <article class="card">
-        <div>
-          <p class="meta">${sample.source} / ${sample.tags.join(", ")}</p>
-          <h3>${sample.title}</h3>
-        </div>
-        <button data-sample-id="${sample.id}">리포트 생성</button>
-      </article>
-    `,
-    )
-    .join("");
+  clear(samplesEl);
+  for (const sample of samples) {
+    const card = createElement("article", { className: "card" });
+    const body = createElement("div");
+    body.append(
+      createElement("p", { className: "meta", text: `${sample.source} / ${sample.tags.join(", ")}` }),
+      createElement("h3", { text: sample.title }),
+    );
+    card.append(
+      body,
+      createElement("button", { text: "리포트 생성", dataset: { sampleId: sample.id } }),
+    );
+    samplesEl.append(card);
+  }
 }
 
 async function loadReports() {
   const { reports } = await fetchJson("/api/reports");
-  reportsEl.innerHTML =
-    reports.length === 0
-      ? '<p class="empty">아직 생성된 리포트가 없습니다.</p>'
-      : reports
-          .map(
-            (report) => `
-      <a class="report-card" href="${report.url}">
-        <strong>${report.title}</strong>
-        <span>${report.summary}</span>
-      </a>
-    `,
-          )
-          .join("");
+  clear(reportsEl);
+  if (reports.length === 0) {
+    reportsEl.append(createElement("p", { className: "empty", text: "아직 생성된 리포트가 없습니다." }));
+    return;
+  }
+
+  for (const report of reports) {
+    const card = createElement("a", { className: "report-card", href: report.url });
+    card.append(
+      createElement("strong", { text: report.title }),
+      createElement("span", { text: report.summary }),
+    );
+    reportsEl.append(card);
+  }
 }
 
 samplesEl.addEventListener("click", async (event) => {

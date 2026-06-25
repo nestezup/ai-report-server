@@ -1,9 +1,11 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const defaultReportsDir = join(rootDir, "public", "reports");
+let indexWriteQueue = Promise.resolve();
 
 export function getReportsDir() {
   return process.env.REPORTS_DIR || defaultReportsDir;
@@ -30,19 +32,25 @@ async function readIndex(reportsDir = getReportsDir()) {
   try {
     const raw = await readFile(join(reportsDir, "index.json"), "utf8");
     return JSON.parse(raw);
-  } catch {
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
     return [];
   }
 }
 
 async function writeIndex(reports, reportsDir = getReportsDir()) {
   await mkdir(reportsDir, { recursive: true });
-  await writeFile(join(reportsDir, "index.json"), `${JSON.stringify(reports, null, 2)}\n`);
+  const indexPath = join(reportsDir, "index.json");
+  const tempPath = join(reportsDir, `.index.${process.pid}.${Date.now()}.tmp`);
+  await writeFile(tempPath, `${JSON.stringify(reports, null, 2)}\n`);
+  await rename(tempPath, indexPath);
 }
 
 function renderReportHtml({ sample, analysis, createdAt }) {
-  const ideas = analysis.contentIdeas.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
-  const actions = analysis.nextActions.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const contentIdeas = Array.isArray(analysis.contentIdeas) ? analysis.contentIdeas : [];
+  const nextActions = Array.isArray(analysis.nextActions) ? analysis.nextActions : [];
+  const ideas = contentIdeas.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
+  const actions = nextActions.map((item) => `<li>${escapeHtml(item)}</li>`).join("");
 
   return `<!doctype html>
 <html lang="ko">
@@ -87,7 +95,7 @@ export async function createReport({ sample, analysis }) {
   await mkdir(reportsDir, { recursive: true });
 
   const createdAt = new Date().toISOString();
-  const slug = `${createdAt.replace(/[:.]/g, "-")}-${slugify(sample.id || sample.title)}.html`;
+  const slug = `${createdAt.replace(/[:.]/g, "-")}-${randomUUID().slice(0, 8)}-${slugify(sample.id || sample.title)}.html`;
   const html = renderReportHtml({ sample, analysis, createdAt });
   await writeFile(join(reportsDir, slug), html);
 
@@ -100,9 +108,11 @@ export async function createReport({ sample, analysis }) {
     createdAt,
   };
 
-  const nextIndex = [report, ...(await readIndex(reportsDir)).filter((item) => item.id !== report.id)];
-  await writeIndex(nextIndex, reportsDir);
+  indexWriteQueue = indexWriteQueue.then(async () => {
+    const nextIndex = [report, ...(await readIndex(reportsDir)).filter((item) => item.id !== report.id)];
+    await writeIndex(nextIndex, reportsDir);
+  });
+  await indexWriteQueue;
 
   return report;
 }
-

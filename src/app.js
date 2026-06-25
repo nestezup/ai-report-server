@@ -8,6 +8,18 @@ import { createReport, listReports } from "./reports.js";
 
 export const app = new Hono();
 
+async function readJsonBody(c) {
+  const contentType = c.req.header("content-type") || "";
+  if (!contentType.toLowerCase().includes("application/json")) {
+    return { error: "content_type_must_be_application_json", status: 415 };
+  }
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body !== "object") {
+    return { error: "invalid_json", status: 400 };
+  }
+  return { body };
+}
+
 app.get("/health", (c) => c.json({ ok: true, service: "ai-report-server" }));
 
 app.get("/api/samples", async (c) => {
@@ -23,7 +35,9 @@ app.get("/api/samples/:id", async (c) => {
 });
 
 app.post("/api/analyze", async (c) => {
-  const body = await c.req.json().catch(() => null);
+  const parsed = await readJsonBody(c);
+  if (parsed.error) return c.json({ ok: false, error: parsed.error }, parsed.status);
+  const body = parsed.body;
   const sampleId = typeof body?.sampleId === "string" ? body.sampleId.trim() : "";
   if (!sampleId) {
     return c.json({ ok: false, error: "sample_id_required" }, 400);
@@ -43,7 +57,9 @@ app.get("/api/reports", async (c) => {
 });
 
 app.post("/api/reports", async (c) => {
-  const body = await c.req.json().catch(() => null);
+  const parsed = await readJsonBody(c);
+  if (parsed.error) return c.json({ ok: false, error: parsed.error }, parsed.status);
+  const body = parsed.body;
   const sampleId = typeof body?.sampleId === "string" ? body.sampleId.trim() : "";
   if (!sampleId) {
     return c.json({ ok: false, error: "sample_id_required" }, 400);
@@ -60,7 +76,9 @@ app.post("/api/reports", async (c) => {
 });
 
 app.post("/api/notion/collect", async (c) => {
-  const body = await c.req.json().catch(() => ({}));
+  const parsed = await readJsonBody(c);
+  if (parsed.error) return c.json({ ok: false, error: parsed.error }, parsed.status);
+  const body = parsed.body;
   const queryText = typeof body?.query === "string" ? body.query.trim() : "";
   const sample = await collectNotionSource({ queryText });
   const saved = await upsertSample(sample);

@@ -33,6 +33,20 @@ export function normalizeNotionPayload(payload) {
   return { title, tags, body };
 }
 
+export function getNotionAllowedTools() {
+  if (process.env.NOTION_ALLOWED_TOOLS) {
+    return process.env.NOTION_ALLOWED_TOOLS.split(",").map((toolName) => toolName.trim()).filter(Boolean);
+  }
+  return [
+    "mcp__notion__search",
+    "mcp__notion__fetch",
+    "mcp__notion__read_page",
+    "mcp__notion__get_page",
+    "mcp__notion__query_database",
+    "mcp__notion__list_pages",
+  ];
+}
+
 export async function collectNotionSource({ queryText }) {
   if ((process.env.NOTION_MODE || "mock") === "mock") {
     const title = "Notion MCP 수집 샘플";
@@ -62,7 +76,15 @@ export async function collectNotionSource({ queryText }) {
   for await (const message of query({
     prompt,
     options: {
-      allowedTools: ["mcp__notion__*"],
+      allowedTools: getNotionAllowedTools(),
+      disallowedTools: [
+        "mcp__notion__create_page",
+        "mcp__notion__update_page",
+        "mcp__notion__delete_page",
+        "mcp__notion__append_block_children",
+        "mcp__notion__create_database",
+        "mcp__notion__update_database",
+      ],
       maxTurns: 6,
       permissionMode: "dontAsk",
       settingSources: ["user", "project", "local"],
