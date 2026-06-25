@@ -73,6 +73,20 @@ document.querySelector("#refresh").addEventListener("click", async () => {
   await loadReports();
 });
 
+document.querySelector("#collect-notion").addEventListener("click", async () => {
+  setStatus("Notion 자료 수집 중");
+  try {
+    await fetchJson("/api/notion/collect", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "다음 발행 콘텐츠 후보" }),
+    });
+    setStatus("Notion 자료 수집 완료");
+    await loadSamples();
+  } catch (error) {
+    setStatus(`수집 실패: ${error.message}`);
+  }
+});
+
 await loadSamples();
 await loadReports();
-

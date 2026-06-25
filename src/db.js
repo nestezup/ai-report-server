@@ -87,3 +87,18 @@ export async function getSample(id) {
     createdAt: row.created_at,
   };
 }
+
+export async function upsertSample(sample) {
+  const db = await ensureSeeded();
+  db.prepare(`
+    INSERT INTO samples (id, title, source, tags_json, body)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      title = excluded.title,
+      source = excluded.source,
+      tags_json = excluded.tags_json,
+      body = excluded.body
+  `).run(sample.id, sample.title, sample.source, JSON.stringify(sample.tags), sample.body);
+
+  return getSample(sample.id);
+}

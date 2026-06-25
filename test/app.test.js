@@ -75,3 +75,27 @@ test("POST /api/reports creates HTML report and updates report index", async () 
     await rm(reportDir, { recursive: true, force: true });
   }
 });
+
+test("POST /api/notion/collect stores collected source without generating HTML", async () => {
+  process.env.NOTION_MODE = "mock";
+
+  try {
+    const response = await app.request("/api/notion/collect", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ query: "다음 주 발행 아이디어" }),
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.equal(body.sample.source, "notion-mcp");
+    assert.ok(body.sample.body.includes("자료 수집 단계"));
+
+    const reportResponse = await app.request("/api/reports");
+    const reportBody = await reportResponse.json();
+    assert.equal(reportBody.reports.some((report) => report.sampleId === body.sample.id), false);
+  } finally {
+    delete process.env.NOTION_MODE;
+  }
+});

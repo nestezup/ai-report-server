@@ -1,9 +1,14 @@
-@import url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/Paperlogy-8ExtraBold.woff2");
+@font-face {
+  font-family: "Paperlogy";
+  font-style: normal;
+  font-weight: 800;
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/Paperlogy-8ExtraBold.woff2") format("woff2");
+}
 
 :root {
   color: #171714;
   background: #f5f1e8;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Paperlogy", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: -0.02em;
 }
 
@@ -31,6 +36,17 @@ button {
 button:disabled {
   cursor: progress;
   opacity: 0.55;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.secondary {
+  background: #b4ff25;
 }
 
 .app-shell,
@@ -173,4 +189,3 @@ p {
     flex-direction: column;
   }
 }
-

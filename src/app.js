@@ -2,7 +2,8 @@ import { Hono } from "hono";
 import { serveStatic } from "@hono/node-server/serve-static";
 
 import { analyzeSample } from "./agent.js";
-import { getSample, listSamples } from "./db.js";
+import { getSample, listSamples, upsertSample } from "./db.js";
+import { collectNotionSource } from "./notion.js";
 import { createReport, listReports } from "./reports.js";
 
 export const app = new Hono();
@@ -56,6 +57,14 @@ app.post("/api/reports", async (c) => {
   const analysis = await analyzeSample(sample);
   const report = await createReport({ sample, analysis });
   return c.json({ ok: true, report, analysis });
+});
+
+app.post("/api/notion/collect", async (c) => {
+  const body = await c.req.json().catch(() => ({}));
+  const queryText = typeof body?.query === "string" ? body.query.trim() : "";
+  const sample = await collectNotionSource({ queryText });
+  const saved = await upsertSample(sample);
+  return c.json({ ok: true, sample: saved });
 });
 
 app.use("/*", serveStatic({ root: "./public" }));
