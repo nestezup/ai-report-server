@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { app } from "../src/app.js";
-import { parseNotionJson } from "../src/notion.js";
+import { normalizeNotionPayload, parseNotionJson } from "../src/notion.js";
 
 test("GET /health returns service status", async () => {
   const response = await app.request("/health");
@@ -108,4 +108,13 @@ test("POST /api/notion/collect stores collected source without generating HTML",
 test("parseNotionJson accepts fenced JSON from model responses", () => {
   const parsed = parseNotionJson('```json\n{"title":"테스트","tags":["notion"],"body":"본문"}\n```');
   assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
+});
+
+test("normalizeNotionPayload fills required fields from sparse MCP output", () => {
+  const normalized = normalizeNotionPayload({ title: "", tags: [], body: "  " });
+  assert.deepEqual(normalized, {
+    title: "Notion MCP 수집 자료",
+    tags: ["notion"],
+    body: "Notion MCP에서 제목만 수집되었습니다.",
+  });
 });

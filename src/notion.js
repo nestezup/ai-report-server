@@ -26,6 +26,13 @@ export function parseNotionJson(text) {
   return JSON.parse(fenced ? fenced[1] : trimmed);
 }
 
+export function normalizeNotionPayload(payload) {
+  const title = typeof payload.title === "string" && payload.title.trim() ? payload.title.trim() : "Notion MCP 수집 자료";
+  const tags = Array.isArray(payload.tags) && payload.tags.length > 0 ? payload.tags : ["notion"];
+  const body = typeof payload.body === "string" && payload.body.trim() ? payload.body.trim() : "Notion MCP에서 제목만 수집되었습니다.";
+  return { title, tags, body };
+}
+
 export async function collectNotionSource({ queryText }) {
   if ((process.env.NOTION_MODE || "mock") === "mock") {
     const title = "Notion MCP 수집 샘플";
@@ -66,11 +73,12 @@ export async function collectNotionSource({ queryText }) {
   }
 
   const parsed = parseNotionJson(parseText(messages));
+  const { title, tags, body } = normalizeNotionPayload(parsed);
   return {
-    id: buildSampleId(parsed.title),
-    title: parsed.title,
+    id: buildSampleId(title),
+    title,
     source: "notion-mcp",
-    tags: Array.isArray(parsed.tags) ? parsed.tags : ["notion"],
-    body: parsed.body,
+    tags,
+    body,
   };
 }
