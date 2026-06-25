@@ -118,3 +118,7 @@ test("normalizeNotionPayload fills required fields from sparse MCP output", () =
     body: "Notion MCP에서 제목만 수집되었습니다.",
   });
 });
+
+test("parseNotionJson rejects non-JSON MCP status text", () => {
+  assert.throws(() => parseNotionJson("Notion MCP가 연결되어 있지 않습니다."), /Unexpected token/);
+});

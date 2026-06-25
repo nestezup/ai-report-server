@@ -72,7 +72,17 @@ export async function collectNotionSource({ queryText }) {
     messages.push(message);
   }
 
-  const parsed = parseNotionJson(parseText(messages));
+  const text = parseText(messages);
+  let parsed;
+  try {
+    parsed = parseNotionJson(text);
+  } catch {
+    parsed = {
+      title: "Notion MCP 수집 상태 확인",
+      tags: ["notion", "mcp-warning"],
+      body: text || "Notion MCP에서 JSON 자료를 반환하지 않았습니다.",
+    };
+  }
   const { title, tags, body } = normalizeNotionPayload(parsed);
   return {
     id: buildSampleId(title),
