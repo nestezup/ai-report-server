@@ -77,7 +77,9 @@ test("POST /api/reports creates HTML report and updates report index", async () 
 });
 
 test("POST /api/notion/collect stores collected source without generating HTML", async () => {
+  const reportDir = await mkdtemp(join(tmpdir(), "ai-report-notion-test-"));
   process.env.NOTION_MODE = "mock";
+  process.env.REPORTS_DIR = reportDir;
 
   try {
     const response = await app.request("/api/notion/collect", {
@@ -97,5 +99,7 @@ test("POST /api/notion/collect stores collected source without generating HTML",
     assert.equal(reportBody.reports.some((report) => report.sampleId === body.sample.id), false);
   } finally {
     delete process.env.NOTION_MODE;
+    delete process.env.REPORTS_DIR;
+    await rm(reportDir, { recursive: true, force: true });
   }
 });
