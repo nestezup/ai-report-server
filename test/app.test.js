@@ -197,6 +197,11 @@ test("parseNotionJson accepts fenced JSON from model responses", () => {
   assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
 });
 
+test("parseNotionJson accepts embedded fenced JSON from MCP status responses", () => {
+  const parsed = parseNotionJson('상태 확인\n```json\n{"title":"테스트","tags":["notion"],"body":"본문"}\n```');
+  assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
+});
+
 test("normalizeNotionPayload fills required fields from sparse MCP output", () => {
   const normalized = normalizeNotionPayload({ title: "", tags: [], body: "  " });
   assert.deepEqual(normalized, {
@@ -211,9 +216,10 @@ test("parseNotionJson rejects non-JSON MCP status text", () => {
 });
 
 test("getNotionAllowedTools ignores wildcard and mutating env tools", () => {
-  process.env.NOTION_ALLOWED_TOOLS = "mcp__notion__*,mcp__notion__search,mcp__notion__update_page,mcp__notion__fetch";
+  process.env.NOTION_ALLOWED_TOOLS =
+    "mcp__notion__*,mcp__notion__notion-search,mcp__notion__notion-update-page,mcp__notion__notion-fetch";
   try {
-    assert.deepEqual(getNotionAllowedTools(), ["mcp__notion__search", "mcp__notion__fetch"]);
+    assert.deepEqual(getNotionAllowedTools(), ["mcp__notion__notion-search", "mcp__notion__notion-fetch"]);
   } finally {
     delete process.env.NOTION_ALLOWED_TOOLS;
   }

@@ -23,7 +23,12 @@ function buildSampleId(title) {
 export function parseNotionJson(text) {
   const trimmed = text.trim();
   const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-  return JSON.parse(fenced ? fenced[1] : trimmed);
+  if (fenced) return JSON.parse(fenced[1]);
+
+  const embeddedFence = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  if (embeddedFence) return JSON.parse(embeddedFence[1]);
+
+  return JSON.parse(trimmed);
 }
 
 export function normalizeNotionPayload(payload) {
@@ -34,7 +39,7 @@ export function normalizeNotionPayload(payload) {
 }
 
 export function getNotionAllowedTools() {
-  const safeToolPattern = /^mcp__notion__[a-z0-9_]+$/i;
+  const safeToolPattern = /^mcp__notion__[a-z0-9_-]+$/i;
   const unsafeActionPattern = /(create|update|delete|append|write|patch|insert|remove)/i;
   if (process.env.NOTION_ALLOWED_TOOLS) {
     return process.env.NOTION_ALLOWED_TOOLS
@@ -43,12 +48,11 @@ export function getNotionAllowedTools() {
       .filter((toolName) => safeToolPattern.test(toolName) && !unsafeActionPattern.test(toolName));
   }
   return [
-    "mcp__notion__search",
-    "mcp__notion__fetch",
-    "mcp__notion__read_page",
-    "mcp__notion__get_page",
-    "mcp__notion__query_database",
-    "mcp__notion__list_pages",
+    "mcp__notion__notion-fetch",
+    "mcp__notion__notion-search",
+    "mcp__notion__notion-query-data-sources",
+    "mcp__notion__notion-query-database-view",
+    "mcp__notion__notion-get-comments",
   ];
 }
 
@@ -78,25 +82,38 @@ export async function collectNotionSource({ queryText }) {
   ].join("\n");
 
   const messages = [];
-  for await (const message of query({
-    prompt,
-    options: {
-      allowedTools: getNotionAllowedTools(),
-      disallowedTools: [
-        "mcp__notion__create_page",
-        "mcp__notion__update_page",
-        "mcp__notion__delete_page",
-        "mcp__notion__append_block_children",
-        "mcp__notion__create_database",
-        "mcp__notion__update_database",
-      ],
-      maxTurns: 6,
-      permissionMode: "dontAsk",
-      settingSources: ["user", "project", "local"],
-      strictMcpConfig: false,
-    },
-  })) {
-    messages.push(message);
+  try {
+    for await (const message of query({
+      prompt,
+      options: {
+        allowedTools: getNotionAllowedTools(),
+        disallowedTools: [
+          "mcp__notion__notion-create-pages",
+          "mcp__notion__notion-update-page",
+          "mcp__notion__notion-move-pages",
+          "mcp__notion__notion-duplicate-page",
+          "mcp__notion__notion-create-database",
+          "mcp__notion__notion-update-data-source",
+          "mcp__notion__notion-create-view",
+          "mcp__notion__notion-update-view",
+          "mcp__notion__notion-create-comment",
+        ],
+        maxTurns: 12,
+        permissionMode: "dontAsk",
+        settingSources: ["user", "project", "local"],
+        strictMcpConfig: false,
+      },
+    })) {
+      messages.push(message);
+    }
+  } catch (error) {
+    return {
+      id: buildSampleId("Notion MCP 수집 실패"),
+      title: "Notion MCP 수집 실패",
+      source: "notion-mcp",
+      tags: ["notion", "mcp-warning"],
+      body: `Notion MCP 호출 중 오류가 발생했습니다: ${error instanceof Error ? error.message : "알 수 없는 오류"}`,
+    };
   }
 
   const text = parseText(messages);
