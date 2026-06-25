@@ -3,6 +3,7 @@ import { serveStatic } from "@hono/node-server/serve-static";
 
 import { analyzeSample } from "./agent.js";
 import { getSample, listSamples } from "./db.js";
+import { createReport, listReports } from "./reports.js";
 
 export const app = new Hono();
 
@@ -34,6 +35,27 @@ app.post("/api/analyze", async (c) => {
 
   const analysis = await analyzeSample(sample);
   return c.json({ ok: true, analysis });
+});
+
+app.get("/api/reports", async (c) => {
+  return c.json({ ok: true, reports: await listReports() });
+});
+
+app.post("/api/reports", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  const sampleId = typeof body?.sampleId === "string" ? body.sampleId.trim() : "";
+  if (!sampleId) {
+    return c.json({ ok: false, error: "sample_id_required" }, 400);
+  }
+
+  const sample = await getSample(sampleId);
+  if (!sample) {
+    return c.json({ ok: false, error: "sample_not_found" }, 404);
+  }
+
+  const analysis = await analyzeSample(sample);
+  const report = await createReport({ sample, analysis });
+  return c.json({ ok: true, report, analysis });
 });
 
 app.use("/*", serveStatic({ root: "./public" }));

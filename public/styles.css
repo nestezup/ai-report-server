@@ -1,0 +1,176 @@
+@import url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2302@1.0/Paperlogy-8ExtraBold.woff2");
+
+:root {
+  color: #171714;
+  background: #f5f1e8;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.02em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f1e8;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  background: #ff6b00;
+  color: #171714;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+button:disabled {
+  cursor: progress;
+  opacity: 0.55;
+}
+
+.app-shell,
+.report-shell {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 40px 22px 64px;
+}
+
+.hero {
+  border-bottom: 2px solid #d8ccb8;
+  padding: 28px 0 34px;
+}
+
+.eyebrow,
+.meta {
+  color: #0a8177;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: clamp(52px, 9vw, 112px);
+  line-height: 0.9;
+  margin: 0 0 18px;
+}
+
+h2,
+h3,
+p {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.hero p:last-child,
+.summary {
+  color: #59554c;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.panel {
+  padding: 30px 0 0;
+}
+
+.panel-title {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.panel-title h2 {
+  font-size: 28px;
+  margin: 0;
+}
+
+#status {
+  color: #31560b;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.card,
+.report-card {
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid #d8ccb8;
+  border-radius: 8px;
+  min-height: 160px;
+  padding: 20px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.card h3 {
+  font-size: 24px;
+  margin: 0;
+}
+
+.report-list {
+  display: grid;
+  gap: 12px;
+}
+
+.report-card {
+  color: inherit;
+  display: grid;
+  gap: 8px;
+  min-height: auto;
+  text-decoration: none;
+}
+
+.report-card strong {
+  font-size: 22px;
+}
+
+.report-card span,
+.empty,
+.report-shell p,
+.report-shell li,
+.report-shell footer {
+  color: #625d53;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.back-link {
+  color: #0a8177;
+  font-weight: 700;
+}
+
+.report-shell section {
+  border-top: 1px solid #d8ccb8;
+  padding-top: 20px;
+}
+
+@media (max-width: 680px) {
+  .app-shell,
+  .report-shell {
+    padding-inline: 16px;
+  }
+
+  .panel-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+

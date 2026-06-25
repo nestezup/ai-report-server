@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Report Server</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">Node 24 + Hono</p>
+      <h1>작은 AI 서버</h1>
+      <p>샘플 자료를 고르고 버튼을 누르면 AI 분석 결과가 HTML 리포트로 저장됩니다.</p>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h2>샘플 자료</h2>
+        <button id="refresh">새로고침</button>
+      </div>
+      <div id="samples" class="grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">
+        <h2>생성된 리포트</h2>
+        <span id="status">대기 중</span>
+      </div>
+      <div id="reports" class="report-list"></div>
+    </section>
+  </main>
+  <script src="/app.js" type="module"></script>
+</body>
+</html>
+

@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 
 import { app } from "../src/app.js";
@@ -44,4 +47,31 @@ test("POST /api/analyze rejects malformed requests", async () => {
   assert.equal(response.status, 400);
   const body = await response.json();
   assert.deepEqual(body, { ok: false, error: "sample_id_required" });
+});
+
+test("POST /api/reports creates HTML report and updates report index", async () => {
+  const reportDir = await mkdtemp(join(tmpdir(), "ai-report-test-"));
+  process.env.REPORTS_DIR = reportDir;
+
+  try {
+    const response = await app.request("/api/reports", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sampleId: "local-shop-review" }),
+    });
+
+    assert.equal(response.status, 200);
+    const body = await response.json();
+    assert.equal(body.ok, true);
+    assert.match(body.report.url, /^\/reports\/.+\.html$/);
+
+    const indexResponse = await app.request("/api/reports");
+    const indexBody = await indexResponse.json();
+    assert.equal(indexBody.ok, true);
+    assert.equal(indexBody.reports.length, 1);
+    assert.equal(indexBody.reports[0].sampleId, "local-shop-review");
+  } finally {
+    delete process.env.REPORTS_DIR;
+    await rm(reportDir, { recursive: true, force: true });
+  }
 });
