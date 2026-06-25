@@ -8,9 +8,14 @@ import { createReport, listReports } from "./reports.js";
 
 export const app = new Hono();
 
+function isJsonContentType(contentType) {
+  const mediaType = contentType.split(";")[0]?.trim().toLowerCase();
+  return mediaType === "application/json" || Boolean(mediaType?.endsWith("+json"));
+}
+
 async function readJsonBody(c) {
   const contentType = c.req.header("content-type") || "";
-  if (!contentType.toLowerCase().includes("application/json")) {
+  if (!isJsonContentType(contentType)) {
     return { error: "content_type_must_be_application_json", status: 415 };
   }
   const body = await c.req.json().catch(() => null);

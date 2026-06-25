@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { after, before, test } from "node:test";
 
 import { app } from "../src/app.js";
-import { normalizeNotionPayload, parseNotionJson } from "../src/notion.js";
+import { getNotionAllowedTools, normalizeNotionPayload, parseNotionJson } from "../src/notion.js";
 import { analyzeSample, parseAgentJson } from "../src/agent.js";
 import { createReport } from "../src/reports.js";
 
@@ -65,14 +65,16 @@ test("POST /api/analyze rejects malformed requests", async () => {
 });
 
 test("POST routes reject non-JSON content types", async () => {
-  const response = await app.request("/api/analyze", {
-    method: "POST",
-    headers: { "content-type": "text/plain" },
-    body: JSON.stringify({ sampleId: "creator-weekly-brief" }),
-  });
+  for (const contentType of ["text/plain", "application/jsonp", "text/plain; application/json"]) {
+    const response = await app.request("/api/analyze", {
+      method: "POST",
+      headers: { "content-type": contentType },
+      body: JSON.stringify({ sampleId: "creator-weekly-brief" }),
+    });
 
-  assert.equal(response.status, 415);
-  assert.deepEqual(await response.json(), { ok: false, error: "content_type_must_be_application_json" });
+    assert.equal(response.status, 415);
+    assert.deepEqual(await response.json(), { ok: false, error: "content_type_must_be_application_json" });
+  }
 });
 
 test("POST /api/reports creates HTML report and updates report index", async () => {
@@ -206,6 +208,15 @@ test("normalizeNotionPayload fills required fields from sparse MCP output", () =
 
 test("parseNotionJson rejects non-JSON MCP status text", () => {
   assert.throws(() => parseNotionJson("Notion MCP가 연결되어 있지 않습니다."), /Unexpected token/);
+});
+
+test("getNotionAllowedTools ignores wildcard and mutating env tools", () => {
+  process.env.NOTION_ALLOWED_TOOLS = "mcp__notion__*,mcp__notion__search,mcp__notion__update_page,mcp__notion__fetch";
+  try {
+    assert.deepEqual(getNotionAllowedTools(), ["mcp__notion__search", "mcp__notion__fetch"]);
+  } finally {
+    delete process.env.NOTION_ALLOWED_TOOLS;
+  }
 });
 
 test("parseAgentJson accepts fenced JSON", () => {

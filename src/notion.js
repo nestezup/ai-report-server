@@ -34,8 +34,13 @@ export function normalizeNotionPayload(payload) {
 }
 
 export function getNotionAllowedTools() {
+  const safeToolPattern = /^mcp__notion__[a-z0-9_]+$/i;
+  const unsafeActionPattern = /(create|update|delete|append|write|patch|insert|remove)/i;
   if (process.env.NOTION_ALLOWED_TOOLS) {
-    return process.env.NOTION_ALLOWED_TOOLS.split(",").map((toolName) => toolName.trim()).filter(Boolean);
+    return process.env.NOTION_ALLOWED_TOOLS
+      .split(",")
+      .map((toolName) => toolName.trim())
+      .filter((toolName) => safeToolPattern.test(toolName) && !unsafeActionPattern.test(toolName));
   }
   return [
     "mcp__notion__search",
