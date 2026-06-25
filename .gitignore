@@ -1,0 +1,8 @@
+node_modules/
+data/*.db
+data/*.db-*
+public/reports/*.html
+public/reports/index.json
+.DS_Store
+.env
+
