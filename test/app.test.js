@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
@@ -124,6 +124,38 @@ test("createReport keeps all concurrent reports in the index", async () => {
     await Promise.all(Array.from({ length: 5 }, () => createReport({ sample, analysis })));
     const index = JSON.parse(await readFile(join(reportDir, "index.json"), "utf8"));
     assert.equal(index.length, 5);
+  } finally {
+    delete process.env.REPORTS_DIR;
+    await rm(reportDir, { recursive: true, force: true });
+  }
+});
+
+test("createReport recovers after a corrupt report index is repaired", async () => {
+  const reportDir = await mkdtemp(join(tmpdir(), "ai-report-corrupt-"));
+  process.env.REPORTS_DIR = reportDir;
+
+  try {
+    const sample = {
+      id: "corrupt-index-sample",
+      title: "손상 인덱스 테스트",
+      tags: ["test"],
+      body: "본문",
+    };
+    const analysis = {
+      model: "test",
+      summary: "손상 인덱스 요약",
+      audience: "테스터",
+      contentIdeas: ["아이디어 A"],
+      nextActions: ["액션 A"],
+    };
+
+    await writeFile(join(reportDir, "index.json"), "{broken");
+    await assert.rejects(() => createReport({ sample, analysis }), SyntaxError);
+
+    await writeFile(join(reportDir, "index.json"), "[]");
+    await createReport({ sample, analysis });
+    const index = JSON.parse(await readFile(join(reportDir, "index.json"), "utf8"));
+    assert.equal(index.length, 1);
   } finally {
     delete process.env.REPORTS_DIR;
     await rm(reportDir, { recursive: true, force: true });

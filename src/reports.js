@@ -108,11 +108,12 @@ export async function createReport({ sample, analysis }) {
     createdAt,
   };
 
-  indexWriteQueue = indexWriteQueue.then(async () => {
+  const writeTask = indexWriteQueue.catch(() => undefined).then(async () => {
     const nextIndex = [report, ...(await readIndex(reportsDir)).filter((item) => item.id !== report.id)];
     await writeIndex(nextIndex, reportsDir);
   });
-  await indexWriteQueue;
+  indexWriteQueue = writeTask.catch(() => undefined);
+  await writeTask;
 
   return report;
 }
