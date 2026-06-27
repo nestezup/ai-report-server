@@ -79,9 +79,10 @@ export async function publishReportToNotion({ sample, analysis, report, queryRun
 
   const prompt = [
     "Notion MCP를 사용해서 아래 AI 리포트를 Notion 페이지로 적재해 주세요.",
-    "반드시 새 페이지를 만드는 작업만 수행하세요.",
+    "반드시 대상 Notion URL 아래에 새 페이지를 만드는 작업만 수행하세요.",
+    "대상 URL은 일반 페이지, 데이터베이스, 데이터베이스 뷰 URL일 수 있습니다.",
     "페이지를 만든 뒤에는 반드시 notion-fetch로 방금 만든 페이지를 다시 조회해 실제 생성 여부를 검증하세요.",
-    `상위 페이지 URL: ${process.env.NOTION_REPORT_PARENT_URL}`,
+    `대상 Notion URL: ${process.env.NOTION_REPORT_PARENT_URL}`,
     "반드시 JSON만 반환하세요.",
     "스키마: { status: \"published\", url: string, title: string, verified: true } 또는 { status: \"failed\", reason: string }",
     "",

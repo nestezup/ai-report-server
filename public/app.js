@@ -1,6 +1,7 @@
 const samplesEl = document.querySelector("#samples");
 const reportsEl = document.querySelector("#reports");
 const statusEl = document.querySelector("#status");
+const activeJobs = new Set();
 
 async function fetchJson(url, options) {
   const response = await fetch(url, options);
@@ -11,6 +12,14 @@ async function fetchJson(url, options) {
 
 function setStatus(text) {
   statusEl.textContent = text;
+}
+
+function updateJobStatus(text) {
+  if (activeJobs.size > 0) {
+    setStatus(`${activeJobs.size}개 리포트 생성 중 / ${text}`);
+    return;
+  }
+  setStatus(text);
 }
 
 function clear(element) {
@@ -43,6 +52,7 @@ async function loadSamples() {
     card.append(
       body,
       createElement("button", { text: "리포트 생성", dataset: { sampleId: sample.id } }),
+      createElement("p", { className: "card-status", text: "대기 중" }),
     );
     samplesEl.append(card);
   }
@@ -74,7 +84,12 @@ samplesEl.addEventListener("click", async (event) => {
   if (!button) return;
 
   button.disabled = true;
-  setStatus("Agent SDK가 AI 분석을 실행 중입니다");
+  activeJobs.add(button.dataset.sampleId);
+  const card = button.closest(".card");
+  const cardStatus = card.querySelector(".card-status");
+  card.classList.add("is-working");
+  cardStatus.textContent = "Agent SDK 분석과 Notion MCP 적재를 실행 중입니다";
+  updateJobStatus("Agent SDK와 Notion MCP가 작업 중입니다");
   try {
     const result = await fetchJson("/api/reports", {
       method: "POST",
@@ -82,17 +97,26 @@ samplesEl.addEventListener("click", async (event) => {
       body: JSON.stringify({ sampleId: button.dataset.sampleId }),
     });
     if (result.notion?.status === "published") {
-      setStatus("AI 리포트 생성 완료 / Notion MCP 적재 완료");
+      cardStatus.textContent = "완료 / Notion MCP 적재 검증됨";
+      updateJobStatus("최근 작업 완료 / Notion MCP 적재 검증됨");
     } else if (result.notion?.status === "failed") {
-      setStatus(`AI 리포트 생성 완료 / Notion MCP 적재 실패: ${result.notion.reason}`);
+      cardStatus.textContent = `리포트 완료 / Notion MCP 실패: ${result.notion.reason}`;
+      updateJobStatus(`최근 작업 완료 / Notion MCP 실패: ${result.notion.reason}`);
     } else {
-      setStatus("AI 리포트 생성 완료 / Notion MCP 적재는 꺼져 있습니다");
+      cardStatus.textContent = "리포트 완료 / Notion MCP 적재 꺼짐";
+      updateJobStatus("최근 작업 완료 / Notion MCP 적재 꺼짐");
     }
     await loadReports();
   } catch (error) {
-    setStatus(`실패: ${error.message}`);
+    cardStatus.textContent = `실패: ${error.message}`;
+    updateJobStatus(`실패: ${error.message}`);
   } finally {
+    activeJobs.delete(button.dataset.sampleId);
+    card.classList.remove("is-working");
     button.disabled = false;
+    if (activeJobs.size === 0 && !cardStatus.textContent.startsWith("실패")) {
+      setStatus(cardStatus.textContent);
+    }
   }
 });
 

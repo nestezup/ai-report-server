@@ -1,6 +1,13 @@
 @font-face {
   font-family: "Paperlogy";
   font-style: normal;
+  font-weight: 100;
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-1Thin.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  font-style: normal;
   font-weight: 300;
   src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-3Light.woff2") format("woff2");
 }
@@ -156,9 +163,23 @@ p {
   justify-content: space-between;
 }
 
+.card.is-working {
+  border-color: #b4ff25;
+  box-shadow: 0 0 0 2px rgba(180, 255, 37, 0.35);
+}
+
 .card h3 {
   font-size: 24px;
   margin: 0;
+}
+
+.card-status {
+  color: #625d53;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.45;
+  margin: 10px 0 0;
+  min-height: 40px;
 }
 
 .report-list {
@@ -208,24 +229,24 @@ p {
 
 .report-page h1 {
   font-size: clamp(42px, 6vw, 78px);
-  font-weight: 300;
+  font-weight: 100;
   line-height: 1.04;
 }
 
 .report-page h2 {
-  font-weight: 400;
+  font-weight: 100;
 }
 
 .report-page .summary,
 .report-page p,
 .report-page li,
 .report-page footer {
-  font-weight: 300;
+  font-weight: 100;
 }
 
 .report-page .eyebrow,
 .report-page .back-link {
-  font-weight: 400;
+  font-weight: 100;
 }
 
 @media (max-width: 680px) {
