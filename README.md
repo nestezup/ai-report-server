@@ -72,11 +72,22 @@ AI_MODE=real npm run dev
 NOTION_MODE=real npm run dev
 ```
 
-둘 다 켜려면:
+AI 분석과 Notion 자료 수집을 둘 다 켜려면:
 
 ```bash
 AI_MODE=real NOTION_MODE=real npm run dev
 ```
+
+생성된 리포트를 Notion 페이지에도 적재하려면 대상 Notion 페이지 URL을 지정합니다.
+
+```bash
+AI_MODE=real \
+NOTION_REPORTS_MODE=real \
+NOTION_REPORT_PARENT_URL="https://app.notion.com/p/..." \
+npm run dev
+```
+
+이 모드는 Notion에 새 페이지를 만드는 쓰기 작업입니다. 수업에서는 강사가 준비한 테스트 페이지를 대상으로 먼저 확인하고, 수강생은 자기 워크스페이스에서 별도 테스트 페이지를 만든 뒤 사용합니다.
 
 ## Notion MCP 도구명
 

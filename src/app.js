@@ -3,8 +3,8 @@ import { serveStatic } from "@hono/node-server/serve-static";
 
 import { analyzeSample } from "./agent.js";
 import { getSample, listSamples, upsertSample } from "./db.js";
-import { collectNotionSource } from "./notion.js";
-import { createReport, listReports } from "./reports.js";
+import { collectNotionSource, publishReportToNotion } from "./notion.js";
+import { createReport, listReports, updateReportNotionResult } from "./reports.js";
 
 export const app = new Hono();
 
@@ -77,7 +77,11 @@ app.post("/api/reports", async (c) => {
 
   const analysis = await analyzeSample(sample);
   const report = await createReport({ sample, analysis });
-  return c.json({ ok: true, report, analysis });
+  const notion = await publishReportToNotion({ sample, analysis, report });
+  if (notion.status !== "skipped") {
+    await updateReportNotionResult(report.id, notion);
+  }
+  return c.json({ ok: true, report: { ...report, notion }, analysis, notion });
 });
 
 app.post("/api/notion/collect", async (c) => {

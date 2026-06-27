@@ -62,6 +62,9 @@ async function loadReports() {
       createElement("strong", { text: report.title }),
       createElement("span", { text: report.summary }),
     );
+    if (report.notion?.status === "published") {
+      card.append(createElement("span", { className: "notion-link", text: `Notion 적재 완료: ${report.notion.title}` }));
+    }
     reportsEl.append(card);
   }
 }
@@ -71,14 +74,20 @@ samplesEl.addEventListener("click", async (event) => {
   if (!button) return;
 
   button.disabled = true;
-  setStatus("AI 분석 중");
+  setStatus("Agent SDK가 AI 분석을 실행 중입니다");
   try {
-    await fetchJson("/api/reports", {
+    const result = await fetchJson("/api/reports", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ sampleId: button.dataset.sampleId }),
     });
-    setStatus("리포트 생성 완료");
+    if (result.notion?.status === "published") {
+      setStatus("AI 리포트 생성 완료 / Notion 적재 완료");
+    } else if (result.notion?.status === "failed") {
+      setStatus(`AI 리포트 생성 완료 / Notion 적재 실패: ${result.notion.reason}`);
+    } else {
+      setStatus("AI 리포트 생성 완료 / Notion 적재는 꺼져 있습니다");
+    }
     await loadReports();
   } catch (error) {
     setStatus(`실패: ${error.message}`);

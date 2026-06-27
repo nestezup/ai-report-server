@@ -158,6 +158,7 @@ p {
 }
 
 .report-card span,
+.notion-link,
 .empty,
 .report-shell p,
 .report-shell li,
@@ -166,6 +167,12 @@ p {
   font-size: 18px;
   font-weight: 400;
   line-height: 1.6;
+}
+
+.notion-link {
+  color: #0a8177;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .back-link {

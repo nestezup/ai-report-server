@@ -117,3 +117,14 @@ export async function createReport({ sample, analysis }) {
 
   return report;
 }
+
+export async function updateReportNotionResult(reportId, notion) {
+  const reportsDir = getReportsDir();
+  const writeTask = indexWriteQueue.catch(() => undefined).then(async () => {
+    const reports = await readIndex(reportsDir);
+    const nextIndex = reports.map((item) => (item.id === reportId ? { ...item, notion } : item));
+    await writeIndex(nextIndex, reportsDir);
+  });
+  indexWriteQueue = writeTask.catch(() => undefined);
+  await writeTask;
+}

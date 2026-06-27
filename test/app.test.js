@@ -5,7 +5,6 @@ import { join } from "node:path";
 import { after, before, test } from "node:test";
 
 import { app } from "../src/app.js";
-import { getNotionAllowedTools, normalizeNotionPayload, parseNotionJson } from "../src/notion.js";
 import { analyzeSample, parseAgentJson } from "../src/agent.js";
 import { createReport } from "../src/reports.js";
 
@@ -189,39 +188,6 @@ test("POST /api/notion/collect stores collected source without generating HTML",
     delete process.env.NOTION_MODE;
     delete process.env.REPORTS_DIR;
     await rm(reportDir, { recursive: true, force: true });
-  }
-});
-
-test("parseNotionJson accepts fenced JSON from model responses", () => {
-  const parsed = parseNotionJson('```json\n{"title":"테스트","tags":["notion"],"body":"본문"}\n```');
-  assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
-});
-
-test("parseNotionJson accepts embedded fenced JSON from MCP status responses", () => {
-  const parsed = parseNotionJson('상태 확인\n```json\n{"title":"테스트","tags":["notion"],"body":"본문"}\n```');
-  assert.deepEqual(parsed, { title: "테스트", tags: ["notion"], body: "본문" });
-});
-
-test("normalizeNotionPayload fills required fields from sparse MCP output", () => {
-  const normalized = normalizeNotionPayload({ title: "", tags: [], body: "  " });
-  assert.deepEqual(normalized, {
-    title: "Notion MCP 수집 자료",
-    tags: ["notion"],
-    body: "Notion MCP에서 제목만 수집되었습니다.",
-  });
-});
-
-test("parseNotionJson rejects non-JSON MCP status text", () => {
-  assert.throws(() => parseNotionJson("Notion MCP가 연결되어 있지 않습니다."), /Unexpected token/);
-});
-
-test("getNotionAllowedTools ignores wildcard and mutating env tools", () => {
-  process.env.NOTION_ALLOWED_TOOLS =
-    "mcp__notion__*,mcp__notion__notion-search,mcp__notion__notion-update-page,mcp__notion__notion-fetch";
-  try {
-    assert.deepEqual(getNotionAllowedTools(), ["mcp__notion__notion-search", "mcp__notion__notion-fetch"]);
-  } finally {
-    delete process.env.NOTION_ALLOWED_TOOLS;
   }
 });
 

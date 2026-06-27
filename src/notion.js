@@ -38,6 +38,21 @@ export function normalizeNotionPayload(payload) {
   return { title, tags, body };
 }
 
+function normalizePublishPayload(payload) {
+  if (payload?.status === "published" && typeof payload.url === "string" && payload.url.trim()) {
+    return {
+      status: "published",
+      url: payload.url.trim(),
+      title: typeof payload.title === "string" && payload.title.trim() ? payload.title.trim() : "Notion 리포트",
+    };
+  }
+
+  return {
+    status: "failed",
+    reason: typeof payload?.reason === "string" && payload.reason.trim() ? payload.reason.trim() : "notion_publish_failed",
+  };
+}
+
 export function getNotionAllowedTools() {
   const safeToolPattern = /^mcp__notion__[a-z0-9_-]+$/i;
   const unsafeActionPattern = /(create|update|delete|append|write|patch|insert|remove)/i;
@@ -54,6 +69,71 @@ export function getNotionAllowedTools() {
     "mcp__notion__notion-query-database-view",
     "mcp__notion__notion-get-comments",
   ];
+}
+
+export async function publishReportToNotion({ sample, analysis, report, queryRunner = query }) {
+  if ((process.env.NOTION_REPORTS_MODE || "mock") !== "real" || !process.env.NOTION_REPORT_PARENT_URL) {
+    return { status: "skipped", reason: "notion_reports_not_configured" };
+  }
+
+  const prompt = [
+    "Notion MCP를 사용해서 아래 AI 리포트를 Notion 페이지로 적재해 주세요.",
+    "반드시 새 페이지를 만드는 작업만 수행하세요.",
+    `상위 페이지 URL: ${process.env.NOTION_REPORT_PARENT_URL}`,
+    "반드시 JSON만 반환하세요.",
+    "스키마: { status: \"published\", url: string, title: string } 또는 { status: \"failed\", reason: string }",
+    "",
+    `제목: ${sample.title} 리포트`,
+    `원본 자료 ID: ${sample.id}`,
+    `태그: ${sample.tags.join(", ")}`,
+    `생성 시각: ${report.createdAt}`,
+    `로컬 리포트 경로: ${report.url}`,
+    `모델: ${analysis.model}`,
+    "",
+    `요약: ${analysis.summary}`,
+    `대상 독자: ${analysis.audience}`,
+    "콘텐츠 아이디어:",
+    ...analysis.contentIdeas.map((item, index) => `${index + 1}. ${item}`),
+    "다음 작업:",
+    ...analysis.nextActions.map((item, index) => `${index + 1}. ${item}`),
+  ].join("\n");
+
+  const messages = [];
+  try {
+    for await (const message of queryRunner({
+      prompt,
+      options: {
+        allowedTools: ["mcp__notion__notion-create-pages"],
+        disallowedTools: [
+          "mcp__notion__notion-update-page",
+          "mcp__notion__notion-move-pages",
+          "mcp__notion__notion-duplicate-page",
+          "mcp__notion__notion-create-database",
+          "mcp__notion__notion-update-data-source",
+          "mcp__notion__notion-create-view",
+          "mcp__notion__notion-update-view",
+          "mcp__notion__notion-create-comment",
+        ],
+        maxTurns: 8,
+        permissionMode: "dontAsk",
+        settingSources: ["user", "project", "local"],
+        strictMcpConfig: false,
+      },
+    })) {
+      messages.push(message);
+    }
+  } catch (error) {
+    return {
+      status: "failed",
+      reason: error instanceof Error ? error.message : "notion_publish_failed",
+    };
+  }
+
+  try {
+    return normalizePublishPayload(parseNotionJson(parseText(messages)));
+  } catch {
+    return { status: "failed", reason: "notion_publish_returned_non_json" };
+  }
 }
 
 export async function collectNotionSource({ queryText }) {
