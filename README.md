@@ -86,9 +86,11 @@ AI_MODE=real NOTION_MODE=real npm run dev
 ```bash
 AI_MODE=real \
 NOTION_REPORTS_MODE=real \
-NOTION_REPORT_PARENT_URL="https://app.notion.com/p/wexxn/05b15622345242bfad77f7a233c5c6e0?v=00a62e3ebb99481e8d93e082353cafd3" \
+NOTION_REPORT_PARENT_URL="https://www.notion.so/your-workspace/your-test-page-or-database" \
 npm run dev
 ```
+
+위 URL은 목업입니다. 따라 하는 분들은 `NOTION_REPORT_PARENT_URL` 값을 자신의 Notion 테스트 페이지, 데이터베이스, 또는 데이터베이스 뷰 URL로 바꿔서 실행합니다.
 
 이 모드는 Notion MCP를 통해 대상 Notion URL 아래에 새 페이지를 만드는 쓰기 작업입니다. 대상은 일반 페이지뿐 아니라 데이터베이스나 데이터베이스 뷰 URL도 사용할 수 있습니다. 수업에서는 강사가 준비한 테스트 페이지나 테스트 DB를 대상으로 먼저 확인하고, 수강생은 자기 워크스페이스에서 별도 테스트 공간을 만든 뒤 사용합니다.
 
