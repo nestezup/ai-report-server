@@ -126,17 +126,17 @@ document.querySelector("#refresh").addEventListener("click", async () => {
 });
 
 document.querySelector("#collect-notion").addEventListener("click", async () => {
-  setStatus("Notion MCP로 자료 수집 중");
+  setStatus("Notion MCP로 자료 가져오는 중");
   try {
     await fetchJson("/api/notion/collect", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ query: "다음 발행 콘텐츠 후보" }),
     });
-    setStatus("Notion MCP 자료 수집 완료");
+    setStatus("Notion MCP 자료 가져오기 완료");
     await loadSamples();
   } catch (error) {
-    setStatus(`수집 실패: ${error.message}`);
+    setStatus(`자료 가져오기 실패: ${error.message}`);
   }
 });
 
