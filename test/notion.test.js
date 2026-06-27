@@ -68,7 +68,7 @@ test("publishReportToNotion creates a Notion page when configured", async () => 
             content: [
               {
                 type: "text",
-                text: '```json\n{"status":"published","url":"https://www.notion.so/report-page","title":"샘플 리포트"}\n```',
+                text: '```json\n{"status":"published","url":"https://www.notion.so/report-page","title":"샘플 리포트","verified":true}\n```',
               },
             ],
           },
@@ -80,6 +80,7 @@ test("publishReportToNotion creates a Notion page when configured", async () => 
       status: "published",
       url: "https://www.notion.so/report-page",
       title: "샘플 리포트",
+      verified: true,
     });
   } finally {
     delete process.env.NOTION_REPORTS_MODE;

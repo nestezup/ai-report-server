@@ -63,7 +63,7 @@ async function loadReports() {
       createElement("span", { text: report.summary }),
     );
     if (report.notion?.status === "published") {
-      card.append(createElement("span", { className: "notion-link", text: `Notion 적재 완료: ${report.notion.title}` }));
+      card.append(createElement("span", { className: "notion-link", text: `Notion MCP 적재 완료: ${report.notion.title}` }));
     }
     reportsEl.append(card);
   }
@@ -82,11 +82,11 @@ samplesEl.addEventListener("click", async (event) => {
       body: JSON.stringify({ sampleId: button.dataset.sampleId }),
     });
     if (result.notion?.status === "published") {
-      setStatus("AI 리포트 생성 완료 / Notion 적재 완료");
+      setStatus("AI 리포트 생성 완료 / Notion MCP 적재 완료");
     } else if (result.notion?.status === "failed") {
-      setStatus(`AI 리포트 생성 완료 / Notion 적재 실패: ${result.notion.reason}`);
+      setStatus(`AI 리포트 생성 완료 / Notion MCP 적재 실패: ${result.notion.reason}`);
     } else {
-      setStatus("AI 리포트 생성 완료 / Notion 적재는 꺼져 있습니다");
+      setStatus("AI 리포트 생성 완료 / Notion MCP 적재는 꺼져 있습니다");
     }
     await loadReports();
   } catch (error) {
@@ -102,14 +102,14 @@ document.querySelector("#refresh").addEventListener("click", async () => {
 });
 
 document.querySelector("#collect-notion").addEventListener("click", async () => {
-  setStatus("Notion 자료 수집 중");
+  setStatus("Notion MCP로 자료 수집 중");
   try {
     await fetchJson("/api/notion/collect", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ query: "다음 발행 콘텐츠 후보" }),
     });
-    setStatus("Notion 자료 수집 완료");
+    setStatus("Notion MCP 자료 수집 완료");
     await loadSamples();
   } catch (error) {
     setStatus(`수집 실패: ${error.message}`);

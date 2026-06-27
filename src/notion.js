@@ -39,11 +39,12 @@ export function normalizeNotionPayload(payload) {
 }
 
 function normalizePublishPayload(payload) {
-  if (payload?.status === "published" && typeof payload.url === "string" && payload.url.trim()) {
+  if (payload?.status === "published" && payload.verified === true && typeof payload.url === "string" && payload.url.trim()) {
     return {
       status: "published",
       url: payload.url.trim(),
       title: typeof payload.title === "string" && payload.title.trim() ? payload.title.trim() : "Notion 리포트",
+      verified: true,
     };
   }
 
@@ -79,9 +80,10 @@ export async function publishReportToNotion({ sample, analysis, report, queryRun
   const prompt = [
     "Notion MCP를 사용해서 아래 AI 리포트를 Notion 페이지로 적재해 주세요.",
     "반드시 새 페이지를 만드는 작업만 수행하세요.",
+    "페이지를 만든 뒤에는 반드시 notion-fetch로 방금 만든 페이지를 다시 조회해 실제 생성 여부를 검증하세요.",
     `상위 페이지 URL: ${process.env.NOTION_REPORT_PARENT_URL}`,
     "반드시 JSON만 반환하세요.",
-    "스키마: { status: \"published\", url: string, title: string } 또는 { status: \"failed\", reason: string }",
+    "스키마: { status: \"published\", url: string, title: string, verified: true } 또는 { status: \"failed\", reason: string }",
     "",
     `제목: ${sample.title} 리포트`,
     `원본 자료 ID: ${sample.id}`,
@@ -103,7 +105,7 @@ export async function publishReportToNotion({ sample, analysis, report, queryRun
     for await (const message of queryRunner({
       prompt,
       options: {
-        allowedTools: ["mcp__notion__notion-create-pages"],
+        allowedTools: ["mcp__notion__notion-create-pages", "mcp__notion__notion-fetch"],
         disallowedTools: [
           "mcp__notion__notion-update-page",
           "mcp__notion__notion-move-pages",

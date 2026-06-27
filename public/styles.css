@@ -1,6 +1,27 @@
 @font-face {
   font-family: "Paperlogy";
   font-style: normal;
+  font-weight: 300;
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-3Light.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  font-style: normal;
+  font-weight: 400;
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-4Regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  font-style: normal;
+  font-weight: 600;
+  src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-6SemiBold.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Paperlogy";
+  font-style: normal;
   font-weight: 800;
   src: url("https://cdn.jsdelivr.net/gh/fonts-archive/Paperlogy/Paperlogy-8ExtraBold.woff2") format("woff2");
 }
@@ -183,6 +204,28 @@ p {
 .report-shell section {
   border-top: 1px solid #d8ccb8;
   padding-top: 20px;
+}
+
+.report-page h1 {
+  font-size: clamp(42px, 6vw, 78px);
+  font-weight: 300;
+  line-height: 1.04;
+}
+
+.report-page h2 {
+  font-weight: 400;
+}
+
+.report-page .summary,
+.report-page p,
+.report-page li,
+.report-page footer {
+  font-weight: 300;
+}
+
+.report-page .eyebrow,
+.report-page .back-link {
+  font-weight: 400;
 }
 
 @media (max-width: 680px) {
