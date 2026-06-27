@@ -234,23 +234,15 @@ p {
   padding-top: 20px;
 }
 
-.report-page {
-  font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", sans-serif;
-  font-synthesis: none;
-  letter-spacing: 0;
-}
-
 .report-page h1 {
   color: #24231f;
   font-size: clamp(42px, 6vw, 78px);
-  font-variation-settings: "wght" 100;
   font-weight: 100 !important;
   line-height: 1.04;
 }
 
 .report-page h2 {
   color: #2c2a25;
-  font-variation-settings: "wght" 120;
   font-weight: 100 !important;
 }
 
@@ -259,13 +251,11 @@ p {
 .report-page li,
 .report-page footer {
   color: #777066;
-  font-variation-settings: "wght" 100;
   font-weight: 100 !important;
 }
 
 .report-page .eyebrow,
 .report-page .back-link {
-  font-variation-settings: "wght" 120;
   font-weight: 100 !important;
 }
 
