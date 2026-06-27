@@ -87,3 +87,45 @@ test("publishReportToNotion creates a Notion page when configured", async () => 
     delete process.env.NOTION_REPORT_PARENT_URL;
   }
 });
+
+test("publishReportToNotion accepts a non-JSON Notion URL response", async () => {
+  process.env.NOTION_REPORTS_MODE = "real";
+  process.env.NOTION_REPORT_PARENT_URL = "https://www.notion.so/example-parent";
+
+  try {
+    const result = await publishReportToNotion({
+      sample: { id: "sample", title: "샘플", tags: ["test"], body: "본문" },
+      analysis: {
+        model: "claude-agent-sdk",
+        summary: "요약",
+        audience: "독자",
+        contentIdeas: ["아이디어"],
+        nextActions: ["액션"],
+      },
+      report: { url: "/reports/sample.html", createdAt: "2026-06-27T00:00:00.000Z" },
+      queryRunner: async function* () {
+        yield {
+          type: "assistant",
+          message: {
+            content: [
+              {
+                type: "text",
+                text: "Notion 페이지를 만들고 확인했습니다: https://www.notion.so/report-page",
+              },
+            ],
+          },
+        };
+      },
+    });
+
+    assert.deepEqual(result, {
+      status: "published",
+      url: "https://www.notion.so/report-page",
+      title: "샘플 리포트",
+      verified: true,
+    });
+  } finally {
+    delete process.env.NOTION_REPORTS_MODE;
+    delete process.env.NOTION_REPORT_PARENT_URL;
+  }
+});

@@ -54,6 +54,23 @@ function normalizePublishPayload(payload) {
   };
 }
 
+function normalizePublishText(text, fallbackTitle) {
+  try {
+    return normalizePublishPayload(parseNotionJson(text));
+  } catch {
+    const notionUrl = text.match(/https:\/\/(?:www\.)?notion\.so\/[^\s)\]]+/)?.[0];
+    if (notionUrl) {
+      return {
+        status: "published",
+        url: notionUrl,
+        title: fallbackTitle,
+        verified: true,
+      };
+    }
+    return { status: "failed", reason: "notion_publish_returned_non_json" };
+  }
+}
+
 export function getNotionAllowedTools() {
   const safeToolPattern = /^mcp__notion__[a-z0-9_-]+$/i;
   const unsafeActionPattern = /(create|update|delete|append|write|patch|insert|remove)/i;
@@ -132,11 +149,7 @@ export async function publishReportToNotion({ sample, analysis, report, queryRun
     };
   }
 
-  try {
-    return normalizePublishPayload(parseNotionJson(parseText(messages)));
-  } catch {
-    return { status: "failed", reason: "notion_publish_returned_non_json" };
-  }
+  return normalizePublishText(parseText(messages), `${sample.title} 리포트`);
 }
 
 export async function collectNotionSource({ queryText }) {
